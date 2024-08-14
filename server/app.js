@@ -5,7 +5,11 @@ const recruiterRoutes = require("./routes/recruiterRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: 'https://recruiter-registaration-and-verification.vercel.app/',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  }));
 app.use(express.json());
 
 app.use("/api/recruiters", recruiterRoutes);
