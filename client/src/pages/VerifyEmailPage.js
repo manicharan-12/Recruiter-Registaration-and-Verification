@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
-import api from '../services/api';
+import api from "../services/api";
 
 const VerifyEmailContainer = styled.div`
   display: flex;
@@ -36,18 +36,22 @@ const VerifyMail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true; // Add a flag to track if the component is still mounted
+    let isMounted = true;
 
     const verifyEmail = async () => {
       try {
         const response = await api.get(`/recruiters/verify/${id}`);
         if (isMounted) {
-          setMessage("Your email has been verified successfully. Redirecting to the login page.");
+          setMessage(
+            "Your email has been verified successfully. Please wait for the admin Approval. Redirecting to the login page."
+          );
           setError(false);
         }
       } catch (error) {
         if (isMounted) {
-          setMessage("Verification failed. Invalid or expired verification link.");
+          setMessage(
+            "Verification failed. Invalid or expired verification link."
+          );
           setError(true);
         }
       }
@@ -56,7 +60,7 @@ const VerifyMail = () => {
     verifyEmail();
 
     return () => {
-      isMounted = false; // Cleanup function to prevent setting state if the component is unmounted
+      isMounted = false;
     };
   }, [id]);
 

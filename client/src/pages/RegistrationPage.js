@@ -1,7 +1,7 @@
 // client/src/pages/RegistrationPage.js
-import React from 'react';
-import styled from 'styled-components';
-import RegistrationForm from '../components/RegistrationForm';
+import React from "react";
+import styled from "styled-components";
+import RegistrationForm from "../components/RegistrationForm";
 
 const RegistrationContainer = styled.div`
   display: flex;

@@ -1,8 +1,8 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom'; // Import Link for navigation
-import api from '../services/api';
+import React from "react";
+import { useForm } from "react-hook-form";
+import styled from "styled-components";
+import { Link } from "react-router-dom"; // Import Link for navigation
+import api from "../services/api";
 
 const FormContainer = styled.form`
   display: flex;
@@ -63,8 +63,13 @@ const LoginLink = styled.p`
 `;
 
 const RegistrationForm = () => {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
-  const password = watch('password');
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+  const password = watch("password");
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirmPassword) {
@@ -72,10 +77,10 @@ const RegistrationForm = () => {
       return;
     }
     try {
-      const response = await api.post('/recruiters/register', data);
+      const response = await api.post("/recruiters/register", data);
       alert(response.data.message);
     } catch (error) {
-      alert('Error registering: ' + error.response.data.message);
+      alert("Error registering: " + error.response.data.message);
     }
   };
 
@@ -84,71 +89,93 @@ const RegistrationForm = () => {
       <Input
         type="text"
         placeholder="Full Name"
-        {...register('fullName', { required: 'Full Name is required' })}
+        {...register("fullName", { required: "Full Name is required" })}
       />
-      {errors.fullName && <ErrorMessage>{errors.fullName.message}</ErrorMessage>}
-      
+      {errors.fullName && (
+        <ErrorMessage>{errors.fullName.message}</ErrorMessage>
+      )}
+
       <Input
         type="text"
         placeholder="Company Name"
-        {...register('companyName', { required: 'Company Name is required' })}
+        {...register("companyName", { required: "Company Name is required" })}
       />
-      {errors.companyName && <ErrorMessage>{errors.companyName.message}</ErrorMessage>}
-      
+      {errors.companyName && (
+        <ErrorMessage>{errors.companyName.message}</ErrorMessage>
+      )}
+
       <Input
         type="email"
         placeholder="Official Email"
-        {...register('email', { required: 'Email is required' })}
+        {...register("email", { required: "Email is required" })}
       />
       {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
-      
+
       <Input
         type="text"
         placeholder="Job Title"
-        {...register('jobTitle', { required: 'Job Title is required' })}
+        {...register("jobTitle", { required: "Job Title is required" })}
       />
-      {errors.jobTitle && <ErrorMessage>{errors.jobTitle.message}</ErrorMessage>}
-      
+      {errors.jobTitle && (
+        <ErrorMessage>{errors.jobTitle.message}</ErrorMessage>
+      )}
+
       <Input
         type="tel"
         placeholder="Contact Number"
-        {...register('contactNumber', { required: 'Contact Number is required' })}
+        {...register("contactNumber", {
+          required: "Contact Number is required",
+        })}
       />
-      {errors.contactNumber && <ErrorMessage>{errors.contactNumber.message}</ErrorMessage>}
-      
+      {errors.contactNumber && (
+        <ErrorMessage>{errors.contactNumber.message}</ErrorMessage>
+      )}
+
       <Input
         type="url"
         placeholder="Company Website"
-        {...register('companyWebsite', { required: 'Company Website is required' })}
+        {...register("companyWebsite", {
+          required: "Company Website is required",
+        })}
       />
-      {errors.companyWebsite && <ErrorMessage>{errors.companyWebsite.message}</ErrorMessage>}
-      
+      {errors.companyWebsite && (
+        <ErrorMessage>{errors.companyWebsite.message}</ErrorMessage>
+      )}
+
       <Input
         type="password"
         placeholder="Password"
-        {...register('password', { required: 'Password is required' })}
+        {...register("password", { required: "Password is required" })}
       />
-      {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
-      
+      {errors.password && (
+        <ErrorMessage>{errors.password.message}</ErrorMessage>
+      )}
+
       <Input
         type="password"
         placeholder="Confirm Password"
-        {...register('confirmPassword', { 
-          required: 'Confirm Password is required', 
-          validate: value => value === password || "Passwords don't match" 
+        {...register("confirmPassword", {
+          required: "Confirm Password is required",
+          validate: (value) => value === password || "Passwords don't match",
         })}
       />
-      {errors.confirmPassword && <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>}
-      
+      {errors.confirmPassword && (
+        <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>
+      )}
+
       <CheckboxContainer>
         <input
           type="checkbox"
-          {...register('agreedToTerms', { required: 'You must agree to the terms and conditions' })}
+          {...register("agreedToTerms", {
+            required: "You must agree to the terms and conditions",
+          })}
         />
         I agree to the terms and conditions
       </CheckboxContainer>
-      {errors.agreedToTerms && <ErrorMessage>{errors.agreedToTerms.message}</ErrorMessage>}
-      
+      {errors.agreedToTerms && (
+        <ErrorMessage>{errors.agreedToTerms.message}</ErrorMessage>
+      )}
+
       <Button type="submit">Register</Button>
       <LoginLink>
         Already registered? <Link to="/login">Login here</Link>

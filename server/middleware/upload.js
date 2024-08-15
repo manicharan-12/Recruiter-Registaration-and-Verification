@@ -1,6 +1,6 @@
-const multer = require('multer');
+const multer = require("multer");
 
-const storage = multer.memoryStorage(); // Store files in memory as Buffer
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|pdf/;
@@ -10,7 +10,7 @@ const fileFilter = (req, file, cb) => {
   if (extName && mimeType) {
     return cb(null, true);
   } else {
-    cb(new Error('Only .jpeg, .jpg, .png, and .pdf formats are allowed!'));
+    cb(new Error("Only .jpeg, .jpg, .png, and .pdf formats are allowed!"));
   }
 };
 

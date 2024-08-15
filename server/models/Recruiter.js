@@ -1,13 +1,12 @@
 // server/models/Recruiter.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const DocumentSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    data: { type: Buffer, required: true },
-    contentType: { type: String, required: true },
-  });
-
+  name: { type: String, required: true },
+  data: { type: Buffer, required: true },
+  contentType: { type: String, required: true },
+});
 
 const RecruiterSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
@@ -26,11 +25,11 @@ const RecruiterSchema = new mongoose.Schema({
   lastLogin: Date,
 });
 
-RecruiterSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
+RecruiterSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();
 });
 
-module.exports = mongoose.model('Recruiter', RecruiterSchema);
+module.exports = mongoose.model("Recruiter", RecruiterSchema);

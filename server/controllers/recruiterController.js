@@ -4,6 +4,9 @@ const {
   sendVerificationEmail,
   sendOTP,
   sendLoginAlert,
+  sendApprovalEmail,
+  sendDocumentsVerificationEmail,
+  sendRejectionEmail,
 } = require("../services/emailService");
 const { generateOTP } = require("../services/otpService");
 const { encryptData, decryptData } = require("../services/encryptionService");
@@ -42,7 +45,7 @@ exports.register = async (req, res) => {
       password,
       agreedToTerms,
       verificationToken: Math.random().toString(36).substring(2, 15),
-      isDocumentVerified:false,
+      isDocumentVerified: false,
     });
 
     await recruiter.save();
@@ -63,10 +66,9 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
     console.log(token);
-    
+
     const recruiter = await Recruiter.findOne({ verificationToken: token });
     console.log(recruiter);
-    
 
     if (!recruiter) {
       return res.status(400).json({ message: "Invalid verification token" });
@@ -88,7 +90,9 @@ exports.login = async (req, res) => {
   try {
     const { email } = req.body;
     const recruiter = await Recruiter.findOne({ email });
-
+    console.log(!recruiter);
+    console.log(!recruiter.isVerified);
+    console.log(!recruiter.isApproved);
     if (!recruiter || !recruiter.isVerified || !recruiter.isApproved) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -99,7 +103,6 @@ exports.login = async (req, res) => {
     res.status(200).json({ message: "OTP sent to your email", encryptedOTP });
 
     await sendOTP(recruiter.email, otp);
-    
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
@@ -144,7 +147,7 @@ exports.uploadVerificationDocuments = async (req, res) => {
 
     const documents = req.files.map((file) => ({
       name: file.originalname,
-      data: file.buffer.toString('base64'),
+      data: file.buffer.toString("base64"),
       contentType: file.mimetype,
     }));
 
@@ -161,36 +164,45 @@ exports.uploadVerificationDocuments = async (req, res) => {
   }
 };
 
-exports.getRecruiters = async (req, res) => {
+exports.rejectRecruiter = async (req, res) => {
   try {
-    const recruiters = await Recruiter.find({
-      $or: [
-        { isVerified: true, isApproved: false },
-        { isVerified: true, isApproved: true, isDocumentVerified: false }
-      ]
-    }).select("fullName companyName verificationDocuments");
+    const { recruiterId } = req.params;
+    const { reason } = req.body;
 
-    const recruitersWithDecodedDocs = recruiters.map(recruiter => {
-      recruiter.verificationDocuments = recruiter.verificationDocuments.map(doc => {
-        try {
-          return {
-            ...doc,
-            data: Buffer.from(doc.data, 'base64').toString('utf-8') // Decode the Base64 data
-          };
-        } catch (err) {
-          console.error("Failed to decode Base64 string:", err);
-          return { ...doc, data: null }; // Handle error appropriately
-        }
-      });
-      return recruiter;
-    });
+    const recruiter = await Recruiter.findById(recruiterId);
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
-    res.status(200).json(recruitersWithDecodedDocs);
+    recruiter.isApproved = false;
+    recruiter.rejectionReason = reason;
+    await recruiter.save();
+
+    await sendRejectionEmail(recruiter.email, reason);
+
+    res.status(200).json({ message: "Recruiter rejected successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching recruiters", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error rejecting recruiter", error: error.message });
   }
 };
 
+exports.getNewRecruiterCount = async (req, res) => {
+  try {
+    const count = await Recruiter.countDocuments({
+      isVerified: true,
+      isApproved: false,
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching new recruiter count",
+      error: error.message,
+    });
+  }
+};
 
 exports.approveRecruiter = async (req, res) => {
   try {
@@ -198,6 +210,7 @@ exports.approveRecruiter = async (req, res) => {
     const recruiter = await Recruiter.findById(recruiterId);
     recruiter.isApproved = true;
     await recruiter.save();
+    await sendApprovalEmail(recruiter.email);
     res.status(200).json({ message: "Recruiter approved successfully" });
   } catch (error) {
     res
@@ -209,23 +222,25 @@ exports.approveRecruiter = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const recruiter = await Recruiter.findById(req.recruiterId);
-    
+
     if (!recruiter) {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    recruiter.verificationDocuments = recruiter.verificationDocuments.map(doc => {
-      try {
-        return {
-          ...doc,
-          data: Buffer.from(doc.data, 'base64').toString('utf-8')
-        };
-      } catch (err) {
-        console.error("Failed to decode Base64 string:", err);
-        return { ...doc, data: null }; // Handle error appropriately
+    recruiter.verificationDocuments = recruiter.verificationDocuments.map(
+      (doc) => {
+        try {
+          return {
+            ...doc,
+            data: Buffer.from(doc.data, "base64").toString("utf-8"),
+          };
+        } catch (err) {
+          console.error("Failed to decode Base64 string:", err);
+          return { ...doc, data: null }; // Handle error appropriately
+        }
       }
-    });
-    
+    );
+
     res.status(200).json({
       fullName: recruiter.fullName,
       email: recruiter.email,
@@ -233,38 +248,128 @@ exports.getProfile = async (req, res) => {
       verificationDocuments: recruiter.verificationDocuments,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching profile", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching profile", error: error.message });
   }
 };
-
 
 exports.verifyRecruiterDocuments = async (req, res) => {
   try {
     const recruiterId = req.params.recruiterId;
     const recruiter = await Recruiter.findById(recruiterId);
-    
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });
     }
-    
-    // Decode each document's data if necessary
-    recruiter.verificationDocuments = recruiter.verificationDocuments.map(doc => {
-      try {
-        return {
-          ...doc,
-          data: Buffer.from(doc.data, 'base64').toString('utf-8')
-        };
-      } catch (err) {
-        console.error("Failed to decode Base64 string:", err);
-        return { ...doc, data: null }; // Handle error appropriately
+
+    recruiter.verificationDocuments = recruiter.verificationDocuments.map(
+      (doc) => {
+        try {
+          return {
+            ...doc,
+            data: Buffer.from(doc.data, "base64").toString("utf-8"),
+          };
+        } catch (err) {
+          console.error("Failed to decode Base64 string:", err);
+          return { ...doc, data: null };
+        }
       }
-    });
-    
-    recruiter.documentsVerified = true;
+    );
+
+    recruiter.isDocumentVerified = true;
     await recruiter.save();
-    
+    await sendDocumentsVerificationEmail(recruiter.email);
+
     res.json({ message: "Documents verified successfully", recruiter });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
+  }
+};
+
+exports.getUnverifiedRecruiters = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+    const skip = (page - 1) * limit;
+
+    const recruiters = await Recruiter.find({
+      isVerified: true,
+      isApproved: false,
+    })
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select("fullName companyName email jobTitle companyWebsite createdAt");
+
+    const totalRecruiters = await Recruiter.countDocuments({
+      isVerified: true,
+      isApproved: false,
+    });
+
+    res.status(200).json({
+      recruiters,
+      totalPages: Math.ceil(totalRecruiters / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching unverified recruiters",
+      error: error.message,
+    });
+  }
+};
+
+exports.getUnverifiedDocuments = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+    const skip = (page - 1) * limit;
+
+    const recruiters = await Recruiter.find({
+      isVerified: true,
+      isApproved: true,
+      isDocumentVerified: false,
+    })
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select(
+        "fullName companyName email jobTitle companyWebsite verificationDocuments createdAt"
+      );
+
+    const totalRecruiters = await Recruiter.countDocuments({
+      isVerified: true,
+      isApproved: true,
+      isDocumentVerified: false,
+    });
+
+    const recruitersWithEncodedDocs = recruiters.map((recruiter) => {
+      const recruiterObject = recruiter.toObject();
+      recruiterObject.verificationDocuments =
+        recruiterObject.verificationDocuments.map((doc) => ({
+          ...doc,
+          data: doc.data.toString("base64"),
+        }));
+      return recruiterObject;
+    });
+
+    res.status(200).json({
+      recruiters: recruitersWithEncodedDocs,
+      totalPages: Math.ceil(totalRecruiters / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching unverified documents",
+      error: error.message,
+    });
   }
 };

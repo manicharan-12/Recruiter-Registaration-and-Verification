@@ -1,7 +1,7 @@
 // client/src/pages/HomePage.js
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import React from "react";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
 
 const HomeContainer = styled.div`
   display: flex;
@@ -54,8 +54,12 @@ const HomePage = () => {
     <HomeContainer>
       <Title>Welcome to Recruiter Portal</Title>
       <ButtonContainer>
-        <StyledLink to="/register" className="register">Register</StyledLink>
-        <StyledLink to="/login" className="login">Login</StyledLink>
+        <StyledLink to="/register" className="register">
+          Register
+        </StyledLink>
+        <StyledLink to="/login" className="login">
+          Login
+        </StyledLink>
       </ButtonContainer>
     </HomeContainer>
   );

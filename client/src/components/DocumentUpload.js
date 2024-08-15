@@ -1,8 +1,8 @@
 // client/src/components/DocumentUpload.js
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import api from '../services/api';
-import Cookies from 'js-cookie'
+import React, { useState } from "react";
+import styled from "styled-components";
+import api from "../services/api";
+import Cookies from "js-cookie";
 
 const UploadForm = styled.form`
   display: flex;
@@ -41,22 +41,26 @@ const DocumentUpload = ({ onUploadSuccess }) => {
     e.preventDefault();
     const formData = new FormData();
     files.forEach((file) => {
-      formData.append('documents', file);
+      formData.append("documents", file);
     });
 
     try {
-      const response = await api.post('/recruiters/upload-documents', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${Cookies.get('token')}`
+      const response = await api.post(
+        "/recruiters/upload-documents",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${Cookies.get("token")}`,
+          },
         }
-      });
+      );
       alert(response.data.message);
       if (onUploadSuccess) {
         onUploadSuccess();
       }
     } catch (error) {
-      alert('Error uploading documents: ' + error.response.data.message);
+      alert("Error uploading documents: " + error.response.data.message);
     }
   };
 

@@ -1,7 +1,7 @@
 // client/src/pages/AdminDashboardPage.js
-import React from 'react';
-import styled from 'styled-components';
-import AdminDashboard from '../components/AdminDashboard';
+import React from "react";
+import styled from "styled-components";
+import AdminDashboard from "../components/AdminDashboard";
 
 const AdminDashboardContainer = styled.div`
   max-width: 1200px;

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import styled from 'styled-components';
-import { useNavigate, Link } from 'react-router-dom';
-import api from '../services/api';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import styled from "styled-components";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../services/api";
 import Cookies from "js-cookie";
 
 const FormContainer = styled.form`
@@ -54,51 +54,61 @@ const RegisterLink = styled.p`
 `;
 
 const LoginForm = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const [otpSent, setOtpSent] = useState(false);
-  const [encryptedOTP, setEncryptedOTP] = useState('');
+  const [encryptedOTP, setEncryptedOTP] = useState("");
   const navigate = useNavigate();
 
   const handleSendOTP = async ({ email }) => {
     try {
-      const response = await api.post('/recruiters/login', { email });
+      const response = await api.post("/recruiters/login", { email });
       setEncryptedOTP(response.data.encryptedOTP);
       setOtpSent(true);
       alert(response.data.message);
     } catch (error) {
-      alert('Error sending OTP: ' + error.response.data.message);
+      alert("Error sending OTP: " + error.response.data.message);
     }
   };
 
   const handleVerifyOTP = async ({ email, otp }) => {
     try {
-      const response = await api.post('/recruiters/verify-otp', { email, otp, encryptedOTP });
-      Cookies.set('token', response.data.token, { expires: 1, path: "/" });
+      const response = await api.post("/recruiters/verify-otp", {
+        email,
+        otp,
+        encryptedOTP,
+      });
+      Cookies.set("token", response.data.token, { expires: 1, path: "/" });
       alert(response.data.message);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      alert('Error verifying OTP: ' + error.response.data.message);
+      alert("Error verifying OTP: " + error.response.data.message);
     }
   };
 
   return (
-    <FormContainer onSubmit={handleSubmit(otpSent ? handleVerifyOTP : handleSendOTP)}>
+    <FormContainer
+      onSubmit={handleSubmit(otpSent ? handleVerifyOTP : handleSendOTP)}
+    >
       <Input
         type="email"
         placeholder="Email"
-        {...register('email', { required: 'Email is required' })}
+        {...register("email", { required: "Email is required" })}
       />
       {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
       {otpSent && (
         <Input
           type="text"
           placeholder="Enter OTP"
-          {...register('otp', { required: 'OTP is required' })}
+          {...register("otp", { required: "OTP is required" })}
         />
       )}
       {errors.otp && <ErrorMessage>{errors.otp.message}</ErrorMessage>}
-      
-      <Button type="submit">{otpSent ? 'Verify OTP' : 'Send OTP'}</Button>
+
+      <Button type="submit">{otpSent ? "Verify OTP" : "Send OTP"}</Button>
       <RegisterLink>
         Haven't registered yet? <Link to="/register">Register now</Link>
       </RegisterLink>

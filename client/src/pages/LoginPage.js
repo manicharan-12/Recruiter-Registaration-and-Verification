@@ -1,7 +1,7 @@
 // client/src/pages/LoginPage.js
-import React from 'react';
-import styled from 'styled-components';
-import LoginForm from '../components/LoginForm';
+import React from "react";
+import styled from "styled-components";
+import LoginForm from "../components/LoginForm";
 
 const LoginContainer = styled.div`
   display: flex;
