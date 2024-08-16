@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import api from "../services/api";
 import Cookies from "js-cookie";
+import { ThreeDots } from 'react-loader-spinner';
 
 const UploadForm = styled.form`
   display: flex;
@@ -32,6 +33,7 @@ const UploadButton = styled.button`
 
 const DocumentUpload = ({ onUploadSuccess }) => {
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
@@ -44,6 +46,7 @@ const DocumentUpload = ({ onUploadSuccess }) => {
       formData.append("documents", file);
     });
 
+    setLoading(true); // Start loading
     try {
       const response = await api.post(
         "/recruiters/upload-documents",
@@ -61,13 +64,27 @@ const DocumentUpload = ({ onUploadSuccess }) => {
       }
     } catch (error) {
       alert("Error uploading documents: " + error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <UploadForm onSubmit={handleSubmit}>
       <FileInput type="file" multiple onChange={handleFileChange} />
-      <UploadButton type="submit">Upload Documents</UploadButton>
+      {loading ? (
+        <ThreeDots
+          height="80"
+          width="80"
+          radius="9"
+          color="#1877f2"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+          visible={true}
+        />
+      ) : (
+        <UploadButton type="submit">Upload Documents</UploadButton>
+      )}
     </UploadForm>
   );
 };

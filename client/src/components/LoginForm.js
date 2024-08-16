@@ -1,9 +1,11 @@
+// client/src/components/LoginForm.js
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import Cookies from "js-cookie";
+import { ThreeDots } from 'react-loader-spinner';
 
 const FormContainer = styled.form`
   display: flex;
@@ -54,16 +56,14 @@ const RegisterLink = styled.p`
 `;
 
 const LoginForm = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const [otpSent, setOtpSent] = useState(false);
   const [encryptedOTP, setEncryptedOTP] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSendOTP = async ({ email }) => {
+    setLoading(true);
     try {
       const response = await api.post("/recruiters/login", { email });
       setEncryptedOTP(response.data.encryptedOTP);
@@ -71,10 +71,13 @@ const LoginForm = () => {
       alert(response.data.message);
     } catch (error) {
       alert("Error sending OTP: " + error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyOTP = async ({ email, otp }) => {
+    setLoading(true);
     try {
       const response = await api.post("/recruiters/verify-otp", {
         email,
@@ -86,13 +89,13 @@ const LoginForm = () => {
       navigate("/dashboard");
     } catch (error) {
       alert("Error verifying OTP: " + error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <FormContainer
-      onSubmit={handleSubmit(otpSent ? handleVerifyOTP : handleSendOTP)}
-    >
+    <FormContainer onSubmit={handleSubmit(otpSent ? handleVerifyOTP : handleSendOTP)}>
       <Input
         type="email"
         placeholder="Email"
@@ -108,7 +111,20 @@ const LoginForm = () => {
       )}
       {errors.otp && <ErrorMessage>{errors.otp.message}</ErrorMessage>}
 
-      <Button type="submit">{otpSent ? "Verify OTP" : "Send OTP"}</Button>
+      {loading ? (
+        <ThreeDots
+          height="80"
+          width="80"
+          radius="9"
+          color="#1877f2"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+          visible={true}
+        />
+      ) : (
+        <Button type="submit">{otpSent ? "Verify OTP" : "Send OTP"}</Button>
+      )}
+
       <RegisterLink>
         Haven't registered yet? <Link to="/register">Register now</Link>
       </RegisterLink>

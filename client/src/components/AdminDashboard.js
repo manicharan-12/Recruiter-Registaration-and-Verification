@@ -1,7 +1,9 @@
+// client/src/components/AdminDashboard.js
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import api from "../services/api";
 import Cookies from "js-cookie";
+import { ThreeDots } from 'react-loader-spinner';
 
 const AdminDashboardContainer = styled.div`
   background-color: white;
@@ -101,8 +103,6 @@ const NewRecruitersBadge = styled.span`
   margin-left: 0.5rem;
 `;
 
-const RejectButton = styled.button``;
-
 const TabContainer = styled.div`
   display: flex;
   margin-bottom: 1rem;
@@ -125,6 +125,7 @@ const AdminDashboard = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [newRecruitersCount, setNewRecruitersCount] = useState(0);
   const [activeTab, setActiveTab] = useState("verify");
+  const [loading, setLoading] = useState(false); // Loading state for API calls
 
   useEffect(() => {
     return () => {
@@ -145,6 +146,7 @@ const AdminDashboard = () => {
   }, [currentPage, sortBy, sortOrder, activeTab]);
 
   const fetchRecruiters = async () => {
+    setLoading(true); // Start loading
     try {
       const endpoint =
         activeTab === "verify"
@@ -158,6 +160,8 @@ const AdminDashboard = () => {
       setTotalPages(response.data.totalPages);
     } catch (error) {
       alert("Error fetching recruiters: " + error.response.data.message);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -173,6 +177,7 @@ const AdminDashboard = () => {
   };
 
   const handleApprove = async (recruiterId) => {
+    setLoading(true); // Start loading
     try {
       await api.put(
         `/recruiters/admin/approve/${recruiterId}`,
@@ -184,10 +189,13 @@ const AdminDashboard = () => {
       fetchRecruiters();
     } catch (error) {
       alert("Error approving recruiter: " + error.response.data.message);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
   const handleVerifyDocuments = async (recruiterId) => {
+    setLoading(true); // Start loading
     try {
       const response = await api.put(
         `/recruiters/admin/verify-documents/${recruiterId}`,
@@ -201,12 +209,15 @@ const AdminDashboard = () => {
       fetchRecruiters();
     } catch (error) {
       alert("Error verifying documents: " + error.response.data.message);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
   const handleReject = async (recruiterId) => {
     const reason = prompt("Please enter a reason for rejection:");
     if (reason) {
+      setLoading(true); // Start loading
       try {
         await api.put(
           `/recruiters/admin/reject/${recruiterId}`,
@@ -218,6 +229,8 @@ const AdminDashboard = () => {
         fetchRecruiters();
       } catch (error) {
         alert("Error rejecting recruiter: " + error.response.data.message);
+      } finally {
+        setLoading(false); // End loading
       }
     }
   };
@@ -275,9 +288,9 @@ const AdminDashboard = () => {
             <ApproveButton onClick={() => handleApprove(recruiter._id)}>
               Approve
             </ApproveButton>
-            <RejectButton onClick={() => handleReject(recruiter._id)}>
+            <button onClick={() => handleReject(recruiter._id)}>
               Reject
-            </RejectButton>
+            </button>
           </>
         ) : (
           <VerifyDocumentsButton
@@ -321,7 +334,19 @@ const AdminDashboard = () => {
         <option value="desc">Descending</option>
         <option value="asc">Ascending</option>
       </SortSelect>
-      <RecruiterList>{recruiters.map(renderRecruiterItem)}</RecruiterList>
+      {loading ? (
+        <ThreeDots
+          height="80"
+          width="80"
+          radius="9"
+          color="#007bff"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}
+          visible={true}
+        />
+      ) : (
+        <RecruiterList>{recruiters.map(renderRecruiterItem)}</RecruiterList>
+      )}
       <Pagination>
         <PageButton
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

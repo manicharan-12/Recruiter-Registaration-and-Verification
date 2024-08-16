@@ -1,8 +1,10 @@
-import React from "react";
+// client/src/components/RegistrationForm.js
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 import api from "../services/api";
+import { ThreeDots } from 'react-loader-spinner';
 
 const FormContainer = styled.form`
   display: flex;
@@ -63,12 +65,8 @@ const LoginLink = styled.p`
 `;
 
 const RegistrationForm = () => {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const [loading, setLoading] = useState(false); // Loading state for API call
   const password = watch("password");
 
   const onSubmit = async (data) => {
@@ -76,11 +74,15 @@ const RegistrationForm = () => {
       alert("Passwords don't match");
       return;
     }
+
+    setLoading(true); // Start loading
     try {
       const response = await api.post("/recruiters/register", data);
       alert(response.data.message);
     } catch (error) {
       alert("Error registering: " + error.response.data.message);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -176,7 +178,20 @@ const RegistrationForm = () => {
         <ErrorMessage>{errors.agreedToTerms.message}</ErrorMessage>
       )}
 
-      <Button type="submit">Register</Button>
+      {loading ? (
+        <ThreeDots
+          height="80"
+          width="80"
+          radius="9"
+          color="#1877f2"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+          visible={true}
+        />
+      ) : (
+        <Button type="submit">Register</Button>
+      )}
+
       <LoginLink>
         Already registered? <Link to="/login">Login here</Link>
       </LoginLink>

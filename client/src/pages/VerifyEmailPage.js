@@ -1,7 +1,9 @@
+// client/src/components/VerifyMail.js
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
+import { ThreeDots } from 'react-loader-spinner';
 
 const VerifyEmailContainer = styled.div`
   display: flex;
@@ -33,12 +35,14 @@ const VerifyMail = () => {
   const [message, setMessage] = useState("Verifying your email...");
   const [error, setError] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [loading, setLoading] = useState(true); // Loading state for API call
   const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
 
     const verifyEmail = async () => {
+      setLoading(true); // Start loading
       try {
         const response = await api.get(`/recruiters/verify/${id}`);
         if (isMounted) {
@@ -54,6 +58,8 @@ const VerifyMail = () => {
           );
           setError(true);
         }
+      } finally {
+        setLoading(false); // End loading
       }
     };
 
@@ -78,7 +84,17 @@ const VerifyMail = () => {
 
   return (
     <VerifyEmailContainer>
-      {error ? (
+      {loading ? (
+        <ThreeDots
+          height="80"
+          width="80"
+          radius="9"
+          color="#1877f2"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+          visible={true}
+        />
+      ) : error ? (
         <ErrorMessage>{message}</ErrorMessage>
       ) : (
         <>
